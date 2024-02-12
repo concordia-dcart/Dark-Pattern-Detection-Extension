@@ -1,56 +1,80 @@
+//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
+
 document.addEventListener('DOMContentLoaded', () => {
   const snapshotButton = document.getElementById('snapshot-button');
   const snapshotImage = document.getElementById('snapshot-image');
-  const resultText = document.createElement('p'); // Create a paragraph to display the result
-  document.body.appendChild(resultText); // Append the result text to the body or a specific container
+  const resultText = document.createElement('p');
+  const apiTokenInput = document.getElementById('api-token'); 
+  
+  document.body.appendChild(resultText);
 
-  snapshotButton.addEventListener('click', () => {
-    chrome.tabs.captureVisibleTab(null, { format: 'png' }, async (dataUrl) => {
+  snapshotButton.addEventListener('click', async () => {
+    try {
+      const apiToken = apiTokenInput.value; 
+      if (!apiToken) {
+        throw new Error('Please enter your API Token');
+      }
+
+      const dataUrl = await captureVisibleTab();
       snapshotImage.src = dataUrl;
       snapshotImage.alt = 'Website Snapshot';
 
-      // Convert Data URL to a Blob
-      const blob = await fetch(dataUrl).then(res => res.blob());
+      const blob = await dataUrlToBlob(dataUrl);
+      const uploadResult = await uploadImage(blob);
 
-      // Create FormData to send the image file
-      const formData = new FormData();
-      formData.append('image', blob, 'screenshot.png');
-
-      // Upload the image to the server
-      try {
-        const uploadResponse = await fetch('http://localhost:3000/upload', {
-          method: 'POST',
-          body: formData
-        });
-        const uploadResult = await uploadResponse.json();
-
-        // If the upload is successful, get the image URL from the server
-        if (uploadResponse.ok) {
-          const accessibleImageUrl = uploadResult.url;
-          
-          // Send the image URL to OpenAI for analysis
-          const openAIResponse = await analyzeImageWithOpenAI(accessibleImageUrl);
-          
-          // Assuming the response has a property `text` containing the analysis
-          resultText.textContent = openAIResponse.choices[0].message.content;
-        } else {
-          throw new Error(uploadResult.error);
-        }
-      } catch (error) {
-        console.error('Upload failed:', error);
-        resultText.textContent = 'Failed to upload image.';
-      }
-    });
+      const openAIResponse = await analyzeImageWithOpenAI(uploadResult.url, apiToken); 
+      resultText.textContent = openAIResponse.choices[0].message.content;
+    } catch (error) {
+      console.error(error);
+      resultText.textContent = error.message;
+    }
   });
 });
 
-// Function to analyze the image using OpenAI's API
-async function analyzeImageWithOpenAI(imageUrl) {
+async function captureVisibleTab() {
+  console.log('Capturing the visible tab...');
+  return new Promise((resolve, reject) => {
+    chrome.tabs.captureVisibleTab(null, {format: 'png'}, dataUrl => {
+      if (chrome.runtime.lastError) {
+        reject(new Error('Error capturing tab: ' + chrome.runtime.lastError.message));
+      } else {
+        resolve(dataUrl);
+      }
+    });
+  });
+}
+
+async function dataUrlToBlob(dataUrl) {
+  console.log('Converting Data URL to Blob...');
+  return fetch(dataUrl).then(res => res.blob());
+}
+
+async function uploadImage(blob) {
+  console.log('Uploading image to server...');
+  const formData = new FormData();
+  formData.append('image', blob, 'screenshot.png');
+
+  return fetch('http://localhost:3000/upload', {
+    method: 'POST',
+    body: formData,
+  }).then(async response => {
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error('Upload failed: ' + result.error);
+    }
+    console.log('Image uploaded successfully.');
+    return result;
+  });
+}
+
+
+async function analyzeImageWithOpenAI(imageUrl, apiToken) {
+  console.log('Sending image URL to OpenAI for analysis...');
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': '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' // Replace with your actual API key
+      'Authorization': `Bearer ${apiToken}`
     },
     body: JSON.stringify({
       model: "gpt-4-vision-preview",
@@ -59,17 +83,13 @@ async function analyzeImageWithOpenAI(imageUrl) {
           "role": "user",
           "content": [
             {"type": "text", "text": "What’s in this image?"},
-            {
-              "type": "image_url",
-              "image_url": {
-                "url": imageUrl
-              }
-            }
+            {"type": "image_url", "image_url": imageUrl}
           ]
         }
       ],
       max_tokens: 300
     })
   });
-  return response.json(); // Parse the JSON response
+  console.log('Analysis received from OpenAI.');
+  return response.json();
 }

@@ -1,19 +1,17 @@
 {
   "manifest_version": 3,
-  "name": "Website Snapshot",
+  "name": "Dark Pattern Detection",
   "version": "1.0",
   "description": "Takes a snapshot of the current website",
-  "permissions": ["activeTab", "scripting"],
+  "permissions": [
+  "activeTab", 
+  "scripting,",
+  "tabs",
+  "http://localhost/*"],
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html" 
   },
   "background": {
     "service_worker": "background.js"
-  },
-  "permissions": [
-    "activeTab",
-    "tabs",
-    "http://localhost/*"
-  ]
-
+  }
 }
