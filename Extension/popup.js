@@ -1,5 +1,3 @@
-//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
-
 document.addEventListener('DOMContentLoaded', () => {
   const snapshotButton = document.getElementById('snapshot-button');
   const snapshotImage = document.getElementById('snapshot-image');
