@@ -19,7 +19,7 @@ app.post('/upload', (req, res) => {
     if (!err && req.file) {
       try {
         await new Promise((resolve, reject) => {
-          const imgUrl = `${process.env.APP_URL || 'http://localhost:3000'}/images/${req.file.filename}`;
+          const imgUrl = `${process.env.APP_URL || 'http://concordia-dcart-dark-pattern-detection-extension-9uwhyac53.vercel.app'}/images/${req.file.filename}`;
           resolve(res.status(200).send({ url: imgUrl }));
           console.log(imgUrl);
         });
@@ -36,6 +36,6 @@ app.post('/upload', (req, res) => {
 if (require.main === module) {
   const port = process.env.PORT || 3000;
   app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+    console.log(`Server running at http://concordia-dcart-dark-pattern-detection-extension-9uwhyac53.vercel.app:${port}`);
   });
 }

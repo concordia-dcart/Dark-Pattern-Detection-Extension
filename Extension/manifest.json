@@ -7,7 +7,7 @@
   "activeTab", 
   "scripting,",
   "tabs",
-  "http://localhost/*"],
+  "concordia-dcart-dark-pattern-detection-extension-9uwhyac53.vercel.app/*"],
   "action": {
     "default_popup": "popup.html" 
   },
