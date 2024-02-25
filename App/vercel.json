@@ -1,26 +1,5 @@
 {
-    "version": 2,
-    "builds": [
-      {
-        "src": "app.js",
-        "use": "@vercel/node"
-      }
-    ],
-    "routes": [
-      {
-        "src": "/images/(.*)",
-        "dest": "/images/$1",
-        "headers": { "cache-control": "public,max-age=0,must-revalidate" }
-      },
-      {
-        "src": "/upload",
-        "methods": ["POST"],
-        "dest": "/app.js"
-      },
-      {
-        "src": "/(.*)",
-        "dest": "/app.js"
-      }
-    ]
-  }
-  
+  "rewrites": [
+      {"source": "/(.*)", "destination": "/"}
+  ]
+}
