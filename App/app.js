@@ -6,7 +6,7 @@ const app = express();
 
 // Configure Multer storage settings
 const storage = multer.diskStorage({
-  destination: './images', 
+  destination: './images', // ensure this directory exists
   filename: (req, file, cb) => {
     cb(null, Date.now() + '-' + file.originalname);
   },
@@ -14,28 +14,30 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage }).single('image');
 
+// Endpoint to handle file uploads
 app.post('/upload', (req, res) => {
   upload(req, res, async err => {
     if (!err && req.file) {
-      try {
-        await new Promise((resolve, reject) => {
-          const imgUrl = `${process.env.APP_URL || 'http://concordia-dcart-dark-pattern-detection-extension-9uwhyac53.vercel.app'}/images/${req.file.filename}`;
-          resolve(res.status(200).send({ url: imgUrl }));
-          console.log(imgUrl);
-        });
-      } catch (error) {
-        return res.status(500).send({ error: 'Failed to generate URL.' });
-      }
+      // Construct the URL to access the uploaded image
+      const imgUrl = `https://dark-pattern-detection-extension-<your-vercel-id>.vercel.app/images/${req.file.filename}`;
+      res.status(200).send({ url: imgUrl });
     } else {
-      return res.status(400).send({ error: err ? err : 'No file uploaded!' });
+      res.status(400).send({ error: err ? err : 'No file uploaded!' });
     }
   });
 });
 
-// Serve static assets
-if (require.main === module) {
-  const port = process.env.PORT || 3000;
-  app.listen(port, () => {
-    console.log(`Server running at http://concordia-dcart-dark-pattern-detection-extension-9uwhyac53.vercel.app:${port}`);
-  });
-}
+// Serve static files from the 'images' directory
+app.use('/images', express.static(path.join(__dirname, 'images')));
+
+// Fallback route for handling 404 errors
+app.use((req, res, next) => {
+  res.status(404).send('404: File Not Found');
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
+
+module.exports = app;
