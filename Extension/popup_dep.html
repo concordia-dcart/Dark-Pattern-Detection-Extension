@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Dark Pattern</title>
+    <style>
+        /* General resets and base styles */
+        body {
+            font-family: 'IBM Plex Sans', sans-serif; /* Updated font for consistency with the new style */
+            margin: 0;
+            padding: 0;
+            background: #f6f6f6; /* Lighter background for a modern look */
+            color: #000000; /* Ensuring text is primarily dark for readability */
+        }
+
+        /* Container to center content and provide padding */
+        .container {
+            width: max-content; /* Adjust this value as needed for your desired width */
+            height: max-content;
+            margin: auto;
+            margin-right: 32px;
+            margin-left: 32px;
+            overflow: hidden;
+            background-size: contain;
+        }
+
+        /* Header styles */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        /* Styling for sections like detection history, search form, and footer */
+        section, aside, footer {
+            background: #FFFFFF;
+            padding: 20px;
+            border-radius: 20px; /* Rounded corners for modern look */
+            box-shadow: 0px 4px 4px #00000040; /* Soft shadow for depth */
+            margin-bottom: 20px;
+        }
+
+        /* Detected item styles */
+        .detected-item {
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        /* Link button styling */
+        .link-button {
+            background-color: #0047ff; /* Blue color for buttons */
+            color: white;
+            padding: 10px 15px;
+            margin: 5px 0;
+            text-decoration: none;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        /* Search form styling */
+        .search-form {
+            display: block; /* Changed from grid to block */
+            width: auto;
+            margin-bottom: 20px; /* Adds some space below the search form */
+        }
+
+        /* Since we are no longer using a grid, we can remove the grid specific styles */
+        .search-form input, .search-form button {
+            width: calc(100% - 20px); /* Adjusts the width to account for padding */
+            margin-bottom: 10px; /* Adds space below each input */
+        }
+
+
+        .search-form button {
+            background-color: #007bff; /* Button color */
+            color: white;
+            cursor: pointer;
+        }
+
+        /* Responsive design adjustments */
+        @media (max-width: 1245x) {
+            .search-form {
+                grid-template-columns: 1fr;
+            }
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .input-group input {
+            width: 90%; /* Ensures input fields take up the full width of their container */
+            padding: 10px;
+            margin-bottom: 10px; /* Adds some space below each input */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        /* Styles for the snapshot image */
+        .snapshot-image {
+            max-width: 90%;
+            height: auto;
+            display: block; /* This will ensure the image is centered if its container is wider */
+            margin-top: 20px; /* Adds some space above the image */
+        }
+
+        /* Adjustments to buttons for consistency */
+        #snapshot-button, #help-button {
+            display: inline-block; /* Aligns buttons next to each other */
+            margin-right: 32px; /* Adds spacing between buttons */
+        }
+
+        .recent-detection {
+            width: 100%; /* Match the width to the search form */
+            margin-top: 32px; /* Space above recent detection */
+        }
+
+        /* Adjust the first detected-item to remove the top border */
+        .detected-item:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .snapshot-image {
+            max-width: 100%; /* Ensures the image is not wider than its container */
+            height: auto; /* Maintains aspect ratio without defining a specific height */
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            object-fit: contain; /* Ensures the entire image is shown */
+            display: block; /* Removes any default inline spacing */
+            margin: 0 auto; /* Centers the image within its container */
+        }
+         
+        .result-container {
+            text-align: center; /* Centers the image and text inside this container */
+            padding: 20px; /* Adds some padding around the content */
+            /* Add any additional styling that you need here */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Find Dark Pattern</h1>
+        </header>
+
+        <aside class="search-form">
+            <div class="input-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" placeholder="Enter your email address">
+            </div>
+            <div class="input-group">
+                <label for="api-token">API Token:</label>
+                <input type="text" id="api-token" placeholder="Enter your API token">
+            </div>
+            <button id="snapshot-button">Take Snapshot</button>
+            <button id="help-button">Help Center</button>
+        </aside>
+
+        <section class="recent-detection">
+            <h2>Recent Detection</h2>
+            <div class="detected-item">
+                <h3>Under $10 Item</h3>
+                <p>One potential dark pattern visible here could be the "Buy again" section...</p>
+                <a href="#" class="link-button">Open webpage</a>
+                <a href="#" class="link-button">Report it to FTC</a>
+            </div>
+            <!-- Additional detected items... -->
+        </section>
+
+        <div class="result-container">
+            <img id="snapshot-image" src="" alt="Website Snapshot" class="snapshot-image">
+            <h3 id="result-title" style="display:none;">Processing Result</h3>
+            <p id="result-text" style="display:none;"></p>
+        </div>
+
+        <footer>
+            <!-- Footer content here -->
+        </footer>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
