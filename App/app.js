@@ -2,7 +2,10 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const cors = require('cors'); 
 const app = express();
+
+app.use(cors());
 
 // Configure Multer storage settings
 const storage = multer.diskStorage({
@@ -19,7 +22,7 @@ app.post('/upload', (req, res) => {
   upload(req, res, async err => {
     if (!err && req.file) {
       // Construct the URL to access the uploaded image
-      const imgUrl = `https://dark-pattern-detection-extension-<your-vercel-id>.vercel.app/images/${req.file.filename}`;
+      const imgUrl = `https://dark-pattern-detection-extension-myekke.vercel.app/images/${req.file.filename}`;
       res.status(200).send({ url: imgUrl });
     } else {
       res.status(400).send({ error: err ? err : 'No file uploaded!' });

@@ -52,11 +52,12 @@ async function uploadImage(blob) {
   const formData = new FormData();
   formData.append('image', blob, 'screenshot.png');
 
-  return fetch('concordia-dcart-dark-pattern-detection-extension-9uwhyac53.vercel.app/upload', {
-    method: 'POST',
-    body: formData,
-  }).then(async response => {
+  return fetch('https://dark-pattern-detection-extension-myekke.vercel.app/upload', {
+  method: 'POST',
+  body: formData,
+}).then(async response => {
     const result = await response.json();
+    print("done")
     if (!response.ok) {
       throw new Error('Upload failed: ' + result.error);
     }

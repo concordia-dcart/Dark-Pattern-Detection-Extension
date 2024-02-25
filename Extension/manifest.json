@@ -6,8 +6,7 @@
   "permissions": [
   "activeTab", 
   "scripting,",
-  "tabs",
-  "concordia-dcart-dark-pattern-detection-extension-9uwhyac53.vercel.app/*"],
+  "tabs"],
   "action": {
     "default_popup": "popup.html" 
   },
