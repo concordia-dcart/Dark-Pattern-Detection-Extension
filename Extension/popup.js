@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const blob = await dataUrlToBlob(dataUrl);
       const uploadResult = await uploadImage(blob);
 
-      const openAIResponse = await analyzeImageWithOpenAI(uploadResult.url, apiToken); 
+      const openAIResponse = await analyzeImageWithOpenAI(uploadResult, apiToken); 
       resultText.textContent = openAIResponse.choices[0].message.content;
     } catch (error) {
       console.error(error);
@@ -52,29 +52,29 @@ async function uploadImage(blob) {
   const formData = new FormData();
   formData.append('image', blob, 'screenshot.png');
 
-  try {
-    const response = await fetch('https://dark-pattern-detection-extension-myekke.vercel.app/upload', {
-      method: 'POST',
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      // Log the response status and statusText
-      console.error('Upload failed:', response.status, response.statusText);
-      // Attempt to parse and log the server response to help with debugging
-      const text = await response.text();
-      console.error('Server response:', text);
-      throw new Error('Upload failed: ' + response.statusText);
-    }
-    
-    console.log('Image uploaded successfully.');
-    const result = await response.json();
-    return result;
-  } catch (error) {
-    console.error(error);
-    throw error; // Re-throw the error to be handled by the calling function
+  const response = await fetch('https://dark-pattern-detection-extension-myekke.vercel.app/upload', {
+    method: 'POST',
+    body: formData,
+  });
+  
+  if (!response.ok) {
+    console.error('Upload failed:', response.status, response.statusText);
+    // Attempt to parse and log the server response to help with debugging
+    const text = await response.text();
+    console.error('Server response:', text);
+    throw new Error('Upload failed: ' + response.statusText);
   }
+  
+  console.log('Image uploaded successfully.');
+
+  // Use the .json() method to parse the JSON body of the response
+  const responseObject = await response.json(); // This line is changed
+  const url = responseObject.lastImageUrl[0];
+  console.log(url);
+
+  return url;
 }
+
 
 async function analyzeImageWithOpenAI(imageUrl, apiToken) {
   console.log('Sending image URL to OpenAI for analysis...');
