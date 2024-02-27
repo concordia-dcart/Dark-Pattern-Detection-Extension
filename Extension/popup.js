@@ -59,7 +59,6 @@ async function uploadImage(blob) {
   
   if (!response.ok) {
     console.error('Upload failed:', response.status, response.statusText);
-    // Attempt to parse and log the server response to help with debugging
     const text = await response.text();
     console.error('Server response:', text);
     throw new Error('Upload failed: ' + response.statusText);
@@ -67,17 +66,16 @@ async function uploadImage(blob) {
   
   console.log('Image uploaded successfully.');
 
-  // Use the .json() method to parse the JSON body of the response
-  const responseObject = await response.json(); // This line is changed
+  const responseObject = await response.json(); 
   const url = responseObject.lastImageUrl[0];
   console.log(url);
 
   return url;
 }
 
-
 async function analyzeImageWithOpenAI(imageUrl, apiToken) {
   console.log('Sending image URL to OpenAI for analysis...');
+
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -89,15 +87,54 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
       messages: [
         {
           "role": "user",
-          "content": [
-            {"type": "text", "text": "What’s in this image?"},
-            {"type": "image_url", "image_url": imageUrl}
-          ]
+          "content":  `You are a dark pattern detector. You will process this picture and give me a text output. 
+          The output file should contain a 40-word overall explanation of the picture and if it is tricky or not. Then assign 0 to 10 to each category based on the scoring role:
+
+          1. Asymmetric 
+          Scores:
+          0 to 2: Equal visual and interactive prominence of choices.
+          3 to 5: Mildly biased presentation; alternative choices less prominent but still visible.
+          6 to 8: Noticeably biased presentation; alternative choices less intuitive or somewhat hidden.
+          9 to 10: Extremely biased presentation; alternative choices almost hidden or very hard to find.
+
+          2. Covert
+          Scores:
+          0 to 2: Transparent user choices without hidden influences.
+          3 to 5: Slight use of design elements that may subtly influence choices.
+          6 to 8: More pronounced use of covert techniques, like the decoy effect, but not completely misleading.
+          9 to 10: User decisions are heavily manipulated without their knowledge, with deceptive design elements.
+
+          3. Deceptive 
+          0 to 2: Accurate and straightforward information with no misleading elements.
+          3 to 5: Some elements of misinformation or partial truths, but not wholly deceptive.
+          6 to 8: Misleading information present but some elements of truth; creates confusion.
+          9 to 10: Completely false or misleading information; induces entirely false beliefs.
+
+          4. Hides Information
+          Scores:
+          0 to 2: All necessary information is readily available and clear.
+          3 to 5: Some information delayed or requires additional steps to access.
+          6 to 8: Important information is obscured or only available late in the process.
+          9 to 10: Crucial information is hidden or only revealed at the last possible moment.
+
+          5. Restrictive 
+          Scores:
+          0 to 2: Complete freedom in user choices with no restrictions.
+          3 to 5: Some limitations on choices, but alternatives are available.
+          6 to 8: Notable restrictions on choices, limited alternatives.
+          9 to 10: Extremely restrictive, forcing users into specific actions with no reasonable alternatives.
+
+          After that, you will send me the exact location of text dark patterns based on picture pixels.`
+        },
+        {
+          "role": "user",
+          "content": `${imageUrl}` 
         }
       ],
-      max_tokens: 300
+      max_tokens: 1000
     })
   });
+
   console.log('Analysis received from OpenAI.');
-  return response.json();
+  return await response.json();
 }

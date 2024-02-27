@@ -1,13 +1,12 @@
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
-const { put, list } = require('@vercel/blob'); // Import both put and list methods
+const { put, list } = require('@vercel/blob'); 
 
 const app = express();
 
 app.use(cors());
 
-// Configure Multer for multipart/form-data
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.post('/upload', upload.single('image'), async (req, res) => {
@@ -16,7 +15,6 @@ app.post('/upload', upload.single('image'), async (req, res) => {
   }
 
   try {
-    // Upload the file to Vercel Blob
     const blob = await put(req.file.originalname, req.file.buffer, {
       access: 'public',
     });
