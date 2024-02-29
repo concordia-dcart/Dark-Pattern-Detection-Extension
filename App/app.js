@@ -22,7 +22,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     const result = await list(); 
     const images = result.blobs
       .map(image => image.url) 
-      .filter(url => url.includes('screenshot') && url.includes('gixzwtla7oggccqv.public.blob.vercel-storage.com'));
+      .filter(url => url.includes('screenshot') && url.includes('public.blob.vercel-storage.com'));
     const lastImageUrl = images.length > 0 ? [images[images.length - 1]] : [];
 
 
