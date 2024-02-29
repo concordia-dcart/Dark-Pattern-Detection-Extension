@@ -22,6 +22,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const openAIResponse = await analyzeImageWithOpenAI(uploadResult, apiToken); 
       resultText.textContent = openAIResponse.choices[0].message.content;
+
+      let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      console.log('HTML Listener Is Working Now.');
+      chrome.tabs.sendMessage(tab.id, { action: "captureHTML" }, (response) => {
+          console.log('Received response:', response);
+          scrapeAndAnalyzePage(response, apiToken);
+          });
     } catch (error) {
       console.error(error);
       resultText.textContent = error.message;
@@ -72,6 +79,39 @@ async function uploadImage(blob) {
 
   return url;
 }
+
+
+function scrapeAndAnalyzePage(htmlContent, apiToken) {
+
+  console.log('scrapeAndAnalyzePage is connecting to OpenAI.');
+
+  const model = "gpt-4-1106-preview";
+  const prompt = "Highlight HTML elements with dark patterns text by putting underline in their tags and only send the modifier HTML, whitout any extra explanation or text"; // Customize your prompt
+  
+  fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiToken}`
+    },
+    body: JSON.stringify({
+      model: model,
+      prompt: `${prompt}: ${htmlContent}`,
+      temperature: 0.5,
+      max_tokens: 100,
+      top_p: 1.0,
+      frequency_penalty: 0.0,
+      presence_penalty: 0.0
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+  })
+  .catch(error => console.error('Error:', error));
+}
+
+
 
 async function analyzeImageWithOpenAI(imageUrl, apiToken) {
   console.log('Sending image URL to OpenAI for analysis...');

@@ -1,17 +1,24 @@
 {
   "manifest_version": 3,
   "name": "Dark Pattern Detection",
-  "version": "1.0",
+  "version": "1.2",
   "description": "Takes a snapshot of the current website",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
   "permissions": [
-  "activeTab", 
-  "scripting,",
-  "tabs"
-],
+    "activeTab",
+    "scripting",
+    "storage",
+    "*://api.openai.com/*"
+  ],
   "action": {
-    "default_popup": "popup.html" 
+    "default_popup": "popup.html"
   },
   "background": {
     "service_worker": "background.js"
   }
-}
+  }
