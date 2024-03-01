@@ -15,18 +15,8 @@ app.post('/upload', upload.single('image'), async (req, res) => {
   }
 
   try {
-    const blob = await put(req.file.originalname, req.file.buffer, {
-      access: 'public',
-    });
-
-    const result = await list(); 
-    const images = result.blobs
-      .map(image => image.url) 
-      .filter(url => url.includes('screenshot') && url.includes('public.blob.vercel-storage.com'));
-    const lastImageUrl = images.length > 0 ? [images[images.length - 1]] : [];
-
-
-    res.status(200).send({lastImageUrl});
+    const imageUrl = await put(req.file.originalname, req.file.buffer, { access: 'public' });
+    res.status(200).send({ imageUrl });
   } catch (error) {
     res.status(500).send({ error: 'Failed to upload image to Blob.' });
   }
