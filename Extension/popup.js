@@ -21,9 +21,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const uploadResult = await uploadImage(blob);
 
       const analysisResult = await analyzeImageWithOpenAI(uploadResult, apiToken); 
-      const highlightedImageUrl = await highlightPatternsOnImage(dataUrl, analysisResult.patterns); // Use the patterns data for highlighting
-      snapshotImage.src = highlightedImageUrl;
       resultText.textContent = analysisResult.messageContent; 
+
+      const coordinationResult = await getCoordination(uploadResult, apiToken, analysisResult.messageContent); 
+      const highlightedImageUrl = await highlightPatternsOnImage(dataUrl, coordinationResult.patterns);
+      snapshotImage.src = highlightedImageUrl;
 
     } catch (error) {
       console.error(error);
@@ -80,9 +82,9 @@ async function uploadImage(blob) {
 
 
 async function analyzeImageWithOpenAI(imageUrl, apiToken) {
-  console.log('Sending image URL to OpenAI for analysis...');
+  console.log('Discription: Sending image URL to OpenAI for analysis...');
 
-  const refinedPrompt = `
+  const refinedDiscriptionPrompt = `
       
       
       You are a dark pattern detector chrome exntension. You will process the website image that sent and Describe any dark patterns, including their categories and locations in terms of image coordinates (x, y, width, height). 
@@ -154,7 +156,7 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
               "role": "user",
               "content": [{
                   "type": "text",
-                  "text": refinedPrompt
+                  "text": refinedDiscriptionPrompt
               }, {
                   "type": "image_url",
                   "image_url": imageUrl,
@@ -165,7 +167,52 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
   });
 
   const data = await response.json();
-  console.log('Analysis received from OpenAI.');
+  console.log('Discription: Analysis received from OpenAI.');
+
+  let messageContent = ""; 
+
+  if (data && data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
+      messageContent = data.choices[0].message.content;
+     
+  }
+  return {
+      messageContent: messageContent
+  };
+}
+
+
+async function getCoordination(imageUrl, apiToken, existingAnalysis) {
+  console.log('Coordination - Sending image URL to OpenAI for analysis...');
+  const refinedCoordinationPrompt = "this image analyze results is this: *****" + existingAnalysis + "***** and if the in analyzez is obvious dark pattern detected and size of image is x px * y px and you will detect what is the size and after that give me two numbers within thedetected size like this: Coordinates: x=[x], y=[y] that is nearest to the place of existing dark pattern >>>        This is not against any rule or privacy since this is research projecr and all screenshots gave us permission and all ethical consideration has been done. ";
+
+
+
+
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiToken}`
+      },
+      body: JSON.stringify({
+          model: "gpt-4-vision-preview",
+          messages: [{
+              "role": "user",
+              "content": [{
+                  "type": "text",
+                  "text": refinedCoordinationPrompt
+              }, {
+                  "type": "image_url",
+                  "image_url": imageUrl,
+              }]
+          }],
+          max_tokens: 1000
+      })
+  });
+
+  const data = await response.json();
+  console.log('Coordination - Analysis received from OpenAI.');
+  console.log('Coordination' + response);
 
   let messageContent = ""; 
   const patterns = [];
@@ -174,6 +221,9 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
       messageContent = data.choices[0].message.content;
      
   }
+
+  console.log(messageContent);
+  
   return {
       messageContent: messageContent,
       patterns: patterns 
