@@ -66,8 +66,34 @@ document.addEventListener('DOMContentLoaded', () => {
           console.error("No active tabs found");
           return;
         }
-    
+        
         const activeTab = tabs[0];
+        const tabTitle = activeTab.title; // Get title of the active tab
+        const pageUrl = activeTab.url; // Get URL of the active tab
+        const websiteName = new URL(pageUrl).hostname; // Ext
+        
+        try {
+          const response = fetch('https://dark-pattern-detection-extension-myekke.vercel.app/api/saveHints', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              // Any other headers like authentication tokens should be added here
+            },
+            body: JSON.stringify({
+              tabTitle,
+              websiteName,
+              pageUrl,
+              hints // This is an array of hints
+            })
+          });
+
+          const result = response.json();
+          console.log(result); // Log the response from the server
+        } catch (error) {
+          console.error("Error sending hints to the server:", error);
+        }
+  
+        
     
         chrome.scripting.executeScript({
           target: { tabId: activeTab.id },
@@ -114,7 +140,6 @@ async function highlightHintsOnPage(hints) {
   });
   return "Success";
 }
-
 
 
 
@@ -170,8 +195,8 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
   const refinedDiscriptionPrompt = `
       
       
-      You are a dark pattern detector chrome exntension. You will process the website image that sent and Describe any dark patterns, including their categories and locations in terms of image coordinates (x, y, width, height). 
-       Also it is good if in your final output assign 0 to 10 to each categories:
+      You are a dark pattern detector chrome exntension. You will process the website image that sent and Describe any dark patterns, including their categories. 
+      Also it is good if in your final output assign 0 to 10 to each categories:
             
       --------------------
        Category 1- Asymmetric 
