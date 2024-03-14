@@ -68,30 +68,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const activeTab = tabs[0];
-        const tabTitle = activeTab.title; // Get title of the active tab
-        const pageUrl = activeTab.url; // Get URL of the active tab
-        const websiteName = new URL(pageUrl).hostname; // Ext
+        // const tabTitle = activeTab.title; // Get title of the active tab
+        // const pageUrl = activeTab.url; // Get URL of the active tab
+        // const websiteName = new URL(pageUrl).hostname; // Ext
         
-        try {
-          const response = fetch('https://dark-pattern-detection-extension-myekke.vercel.app/api/saveHints', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              // Any other headers like authentication tokens should be added here
-            },
-            body: JSON.stringify({
-              tabTitle,
-              websiteName,
-              pageUrl,
-              hints // This is an array of hints
-            })
-          });
+        // try {
+        //   const response = fetch('https://dark-pattern-detection-extension-myekke.vercel.app/api/saveHints', {
+        //     method: 'POST',
+        //     headers: {
+        //       'Content-Type': 'application/json',
+        //       // Any other headers like authentication tokens should be added here
+        //     },
+        //     body: JSON.stringify({
+        //       tabTitle,
+        //       websiteName,
+        //       pageUrl,
+        //       hints // This is an array of hints
+        //     })
+        //   });
 
-          const result = response.json();
-          console.log(result); // Log the response from the server
-        } catch (error) {
-          console.error("Error sending hints to the server:", error);
-        }
+        //   const result = response.json();
+        //   console.log(result); // Log the response from the server
+        // } catch (error) {
+        //   console.error("Error sending hints to the server:", error);
+        // }
   
         
     

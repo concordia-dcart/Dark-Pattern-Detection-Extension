@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Dark Pattern Detection",
-  "version": "1.2",
-  "description": "Takes a snapshot of the current website",
+  "name": "Dark Pattern Detection - Concordia University",
+  "version": "1.4.1",
+  "description": "This plugin will use a snapshot of your current tab. It will send it to OpenAI to detect if there is any derk pattern there or not!",
   "content_scripts": [
     {
       "matches": ["http://*/*", "https://*/*"],
@@ -16,6 +16,11 @@
     "storage"
   ],
   "action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
     "default_popup": "popup.html"
   },
   "background": {
