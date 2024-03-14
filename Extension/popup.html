@@ -8,28 +8,24 @@
       margin: 0;
       padding: 20px;
     }
-
     .container {
       display: flex;
       flex-direction: column;
       gap: 10px;
       min-width: 300px; 
     }
-
     .input-group {
       display: flex;
       flex-direction: row;
       gap: 5px;
       align-items: center;
     }
-
     input[type="text"], input[type="email"] {
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 5px;
       width: 100%;
     }
-
     button {
       padding: 10px 20px;
       border: none;
@@ -37,17 +33,14 @@
       cursor: pointer;
       width: auto; 
     }
-
     .primary-button {
       background-color: #000000;
       color: #fff;
     }
-
     .secondary-button {
       background-color: #ccc;
       color: #333;
     }
-
     .snapshot-image {
       width: 100%;
       height: auto;
@@ -58,9 +51,7 @@
   </style>
 </head>
 <body>
-  <h1>
-   Dark Pattern Detector!
-  </h1>
+  <h1>Dark Pattern Detector!</h1>
   <div class="container">
     <div class="input-group">
       <label for="email">Email:</label>
@@ -70,12 +61,12 @@
       <label for="api-token">API Token:</label>
       <input type="text" id="api-token" placeholder="Enter your API token">
     </div>
-    <button id="snapshot-button" class="primary-button">Detect Pattern</button>
-    <button id="help-button" class="secondary-button">Help Center</button> 
+    <button id="snapshot-button" class="primary-button">Describe Patterns</button>
+    <button id="testButton">Highlight Patterns</button>
     <br>
     <img id="snapshot-image" src="" alt="Website Snapshot" class="snapshot-image">
     <div id="loading-indicator" style="display:none;">Analyzing...</div>
-    <div id="analysis-result" class="analysis-result"></div> <!-- Area to display analysis results -->
+    <div id="analysis-result" class="analysis-result"></div> 
   </div>
   <script src="popup.js"></script>
 </body>

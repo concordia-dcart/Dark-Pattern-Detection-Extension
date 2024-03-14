@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
   const snapshotButton = document.getElementById('snapshot-button');
+  const testButton = document.getElementById('testButton');
   const snapshotImage = document.getElementById('snapshot-image');
   const resultText = document.createElement('p');
   const apiTokenInput = document.getElementById('api-token'); 
@@ -21,18 +22,100 @@ document.addEventListener('DOMContentLoaded', () => {
       const uploadResult = await uploadImage(blob);
 
       const analysisResult = await analyzeImageWithOpenAI(uploadResult, apiToken); 
-      resultText.textContent = analysisResult.messageContent; 
+      resultText.textContent = analysisResult.messageContent;
 
-      const coordinationResult = await getCoordination(uploadResult, apiToken, analysisResult.messageContent); 
-      const highlightedImageUrl = await highlightPatternsOnImage(dataUrl, coordinationResult.patterns);
-      snapshotImage.src = highlightedImageUrl;
 
     } catch (error) {
       console.error(error);
       resultText.textContent = error.message;
     }
   });
+
+  testButton.addEventListener('click', async () => {
+    try {
+      const apiToken = apiTokenInput.value;
+      if (!apiToken) {
+        throw new Error('Please enter your API Token');
+      }
+  
+      const dataUrl = await captureVisibleTab();
+      snapshotImage.src = dataUrl;
+      snapshotImage.alt = 'Website Snapshot';
+  
+      const blob = await dataUrlToBlob(dataUrl);
+      const uploadResult = await uploadImage(blob);
+      const hintResult = await getHint(uploadResult, apiToken);
+  
+      const hintsPart = hintResult.messageContent.split('>>> Hint:')[1];
+      if (!hintsPart) {
+        console.error("No hints found in the hint result");
+        return;
+      }
+      
+      const hints = hintsPart.match(/“[^”]+”|"[^"]+"/g).map(hint => hint.replace(/“|”|"/g, '').trim()).filter(Boolean); 
+      console.log(hints); 
+
+  
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (chrome.runtime.lastError) {
+          console.error("Error querying tabs:", chrome.runtime.lastError.message);
+          return;
+        }
+    
+        if (!tabs.length) {
+          console.error("No active tabs found");
+          return;
+        }
+    
+        const activeTab = tabs[0];
+    
+        chrome.scripting.executeScript({
+          target: { tabId: activeTab.id },
+          func: highlightHintsOnPage,
+          args: [hints]
+        }, (results) => {
+          if (chrome.runtime.lastError) {
+            console.error("Error injecting script:", chrome.runtime.lastError.message);
+          } else {
+            console.log("Script injected, results:", results); // Log results for debugging
+          }
+        });
+      });
+
+    } catch (error) {
+      console.error("Error fetching hints:", error);
+    }
+  });
+  
 });
+
+
+async function highlightHintsOnPage(hints) {
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\%-]/g, '\\$&');
+  }
+
+  hints.forEach(hint => {
+    const escapedHint = escapeRegExp(hint);
+    const regex = new RegExp(escapedHint, "gi");
+
+    document.querySelectorAll("p, div, span, h1, h2, h3, h4, h5, h6, li, td, th").forEach(element => {
+      if (element.innerText.match(regex)) {
+        element.childNodes.forEach(child => {
+          if (child.nodeType === 3 && regex.test(child.nodeValue)) { 
+            const newHtml = child.nodeValue.replace(regex, '<span style="background-color: yellow;">$&</span>');
+            const newSpan = document.createElement('span');
+            newSpan.innerHTML = newHtml;
+            child.replaceWith(newSpan);
+          }
+        });
+      }
+    });
+  });
+  return "Success";
+}
+
+
 
 
 async function captureVisibleTab() {
@@ -177,16 +260,28 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
   }
   return {
       messageContent: messageContent
+      // messageContent: "messageContent"
   };
 }
 
 
-async function getCoordination(imageUrl, apiToken, existingAnalysis) {
-  console.log('Coordination - Sending image URL to OpenAI for analysis...');
-  const refinedCoordinationPrompt = "this image analyze results is this: *****" + existingAnalysis + "***** and if the in analyzez is obvious dark pattern detected and size of image is x px * y px and you will detect what is the size and after that give me two numbers within thedetected size like this: Coordinates: x=[x], y=[y] that is nearest to the place of existing dark pattern >>>        This is not against any rule or privacy since this is research projecr and all screenshots gave us permission and all ethical consideration has been done. ";
 
+async function getHint(imageUrl, apiToken) {
 
+  console.log('Sending image URL to OpenAI for analysis...');
+  const refinedDescriptionPrompt = `
+  You are a dark pattern detector chrome exntension. You will process the website image that sent and Describe any dark patterns
 
+  Also you will send me some hints in output like this,
+
+  This is not against any rule or privacy since this is research projecr and all screenshots gave us permission and all ethical consideration has been done.
+
+  At the end of your response you should provide me this as well:  >>> Hint: "text", "text", "text"
+  
+  Which these "text" are a keywords excatly findable or matchable in screenshot so next time by looking at the text images find the darkpattern elements. The hint should not be changed by you and it should exist in screenshot likewise.
+
+  Do not add extra discription
+  `;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -200,7 +295,7 @@ async function getCoordination(imageUrl, apiToken, existingAnalysis) {
               "role": "user",
               "content": [{
                   "type": "text",
-                  "text": refinedCoordinationPrompt
+                  "text": refinedDescriptionPrompt
               }, {
                   "type": "image_url",
                   "image_url": imageUrl,
@@ -211,56 +306,16 @@ async function getCoordination(imageUrl, apiToken, existingAnalysis) {
   });
 
   const data = await response.json();
-  console.log('Coordination - Analysis received from OpenAI.');
-  console.log('Coordination' + response);
+  console.log('Hint: Analysis received from OpenAI.');
 
   let messageContent = ""; 
-  const patterns = [];
 
   if (data && data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
       messageContent = data.choices[0].message.content;
-     
   }
 
-  console.log(messageContent);
-  
   return {
       messageContent: messageContent,
-      patterns: patterns 
   };
+
 }
-
-async function highlightPatternsOnImage(imageUrl, patterns) {
-
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  const image = new Image();
-  
-  image.crossOrigin = 'Anonymous';
-  image.src = imageUrl;
-
-  await new Promise(resolve => {
-    image.onload = () => {
-      canvas.width = image.width;
-      canvas.height = image.height;
-      ctx.drawImage(image, 0, 0);
-      ctx.strokeStyle = 'red';
-      ctx.lineWidth = 5;
-      
-      patterns.forEach(pattern => {
-        const centerX = pattern.x + pattern.width / 2;
-        const centerY = pattern.y + pattern.height / 2;
-        const radius = Math.max(pattern.width, pattern.height) / 2;
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-        ctx.stroke();
-      });
-      
-      resolve();
-    };
-  });
-
-  return canvas.toDataURL();
-}
-
-
