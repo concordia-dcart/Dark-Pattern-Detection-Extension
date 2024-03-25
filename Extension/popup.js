@@ -18,9 +18,8 @@ function getElements() {
 
 async function handleButtonClick(elements, isSnapshot) {
   try {
+      
       const apiToken = validateApiToken(elements.apiTokenInput);
-      const model = document.getElementById('model').value;
-      validateModel(model);
 
       const dataUrl = await captureVisibleTab();
       updateSnapshotImage(elements.snapshotImage, dataUrl);
@@ -28,27 +27,57 @@ async function handleButtonClick(elements, isSnapshot) {
       const blob = await dataUrlToBlob(dataUrl);
       const uploadResult = await uploadImage(blob);
 
+      const model = document.getElementById('model').value;
+      const modelOps = modelOperations[model];
+
+      if (!modelOps) throw new Error('Unsupported model selected');
+
+      // Use model-specific operations
       if (isSnapshot) {
-          const analysisResult = await analyzeImageWithOpenAI(uploadResult, apiToken);
-          elements.resultText.textContent = analysisResult.messageContent;
+        const analysisResult = await modelOps.analyzeImage(uploadResult, apiToken);
+        elements.resultText.textContent = analysisResult.messageContent;
       } else {
-          const hintResult = await getHint(uploadResult, apiToken);
-          processHintResult(hintResult);
+        const hintResult = await modelOps.getHint(uploadResult, apiToken);
+        processHintResult(hintResult);
       }
+      
   } catch (error) {
-      console.error(error);
-      elements.resultText.textContent = error.message;
+    console.error(error);
+    elements.resultText.textContent = error.message;
   }
 }
+
+
+const modelOperations = {
+
+  "openai_gpt4": {
+    analyzeImage: analyzeImageWithOpenAI,
+    getHint: getHint,
+  },
+
+  "bert": {
+  
+  },
+
+  "openai_gpt3.5": {
+  
+  },
+
+  "openai_gpt3.5ft": {
+  
+  },
+
+  "lamma": {
+  
+  }
+
+};
+
 
 function validateApiToken(apiTokenInput) {
   const apiToken = apiTokenInput.value;
   if (!apiToken) throw new Error('Please enter your API Token');
   return apiToken;
-}
-
-function validateModel(model) {
-  if (model !== 'openai_gpt4') throw new Error('Selected model is not OpenAI GPT-4');
 }
 
 function updateSnapshotImage(snapshotImage, dataUrl) {
@@ -134,7 +163,6 @@ async function highlightHintsOnPage(hints) {
 }
 
 
-
 async function captureVisibleTab() {
   console.log('Capturing the visible tab...');
   return new Promise((resolve, reject) => {
@@ -148,10 +176,12 @@ async function captureVisibleTab() {
   });
 }
 
+
 async function dataUrlToBlob(dataUrl) {
   console.log('Converting Data URL to Blob...');
   return fetch(dataUrl).then(res => res.blob());
 }
+
 
 async function uploadImage(blob) {
   console.log('Uploading image to server...');
@@ -179,7 +209,6 @@ async function uploadImage(blob) {
 
   return url;
 }
-
 
 
 async function analyzeImageWithOpenAI(imageUrl, apiToken) {
@@ -281,7 +310,6 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
       // messageContent: "messageContent"
   };
 }
-
 
 
 async function getHint(imageUrl, apiToken) {
