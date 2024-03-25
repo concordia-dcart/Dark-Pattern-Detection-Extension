@@ -32,7 +32,6 @@ async function handleButtonClick(elements, isSnapshot) {
 
       if (!modelOps) throw new Error('Unsupported model selected');
 
-      // Use model-specific operations
       if (isSnapshot) {
         const analysisResult = await modelOps.analyzeImage(uploadResult, apiToken);
         elements.resultText.textContent = analysisResult.messageContent;
