@@ -61,6 +61,16 @@
       <label for="api-token">API Token:</label>
       <input type="text" id="api-token" placeholder="Enter your API token">
     </div>
+    <div class="input-group">
+      <label for="model">Model:</label>
+      <select name="model" id="model">
+        <option value="openai_gpt4">GPT-4</option>
+        <option value="bert">BERT</option>
+        <option value="openai_gpt3.5">GPT-3.5</option>
+        <option value="openai_gpt3.5ft">GPT-3.5-FineTuned</option>
+        <option value="lamma">LlaMA</option>
+      </select>
+    </div>
     <button id="snapshot-button" class="primary-button">Describe Patterns</button>
     <button id="testButton">Highlight Patterns</button>
     <br>
@@ -70,4 +80,5 @@
   </div>
   <script src="popup.js"></script>
 </body>
+</html>
 </html>

@@ -9,21 +9,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   snapshotButton.addEventListener('click', async () => {
     try {
+
       const apiToken = apiTokenInput.value; 
       if (!apiToken) {
         throw new Error('Please enter your API Token');
       }
+      
+      const model = document.getElementById('model').value;
 
-      const dataUrl = await captureVisibleTab();
-      snapshotImage.src = dataUrl;
-      snapshotImage.alt = 'Website Snapshot';
+      if (model === 'openai_gpt4') {
+        const dataUrl = await captureVisibleTab();
+        snapshotImage.src = dataUrl;
+        snapshotImage.alt = 'Website Snapshot';
 
-      const blob = await dataUrlToBlob(dataUrl);
-      const uploadResult = await uploadImage(blob);
+        const blob = await dataUrlToBlob(dataUrl);
+        const uploadResult = await uploadImage(blob);
 
-      const analysisResult = await analyzeImageWithOpenAI(uploadResult, apiToken); 
-      resultText.textContent = analysisResult.messageContent;
+        const analysisResult = await analyzeImageWithOpenAI(uploadResult, apiToken); 
+        resultText.textContent = analysisResult.messageContent;
 
+      } else { // If the selected model is not OpenAI GPT-4, call an empty function or add your own functionality here
+        console.log('Selected model is not OpenAI GPT-4');
+        throw new Error('Selected model is not OpenAI GPT-4');
+      }
 
     } catch (error) {
       console.error(error);
@@ -38,6 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('Please enter your API Token');
       }
   
+      const model = document.getElementById('model').value;
+
+      if (model === 'openai_gpt4') {
+
       const dataUrl = await captureVisibleTab();
       snapshotImage.src = dataUrl;
       snapshotImage.alt = 'Website Snapshot';
@@ -107,6 +119,12 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       });
+
+    } else { // If the selected model is not OpenAI GPT-4, call an empty function or add your own functionality here
+      console.log('Selected model is not OpenAI GPT-4');
+      throw new Error('Selected model is not OpenAI GPT-4');
+    }
+
 
     } catch (error) {
       console.error("Error fetching hints:", error);
