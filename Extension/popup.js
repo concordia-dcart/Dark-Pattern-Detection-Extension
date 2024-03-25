@@ -1,137 +1,111 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const snapshotButton = document.getElementById('snapshot-button');
-  const testButton = document.getElementById('testButton');
-  const snapshotImage = document.getElementById('snapshot-image');
-  const resultText = document.createElement('p');
-  const apiTokenInput = document.getElementById('api-token'); 
-  
-  document.body.appendChild(resultText);
+  const elements = getElements();
+  document.body.appendChild(elements.resultText);
 
-  snapshotButton.addEventListener('click', async () => {
-    try {
+  elements.snapshotButton.addEventListener('click', () => handleButtonClick(elements, true));
+  elements.testButton.addEventListener('click', () => handleButtonClick(elements, false));
+});
 
-      const apiToken = apiTokenInput.value; 
-      if (!apiToken) {
-        throw new Error('Please enter your API Token');
-      }
-      
+function getElements() {
+  return {
+      snapshotButton: document.getElementById('snapshot-button'),
+      testButton: document.getElementById('testButton'),
+      snapshotImage: document.getElementById('snapshot-image'),
+      resultText: document.createElement('p'),
+      apiTokenInput: document.getElementById('api-token')
+  };
+}
+
+async function handleButtonClick(elements, isSnapshot) {
+  try {
+      const apiToken = validateApiToken(elements.apiTokenInput);
       const model = document.getElementById('model').value;
-
-      if (model === 'openai_gpt4') {
-        const dataUrl = await captureVisibleTab();
-        snapshotImage.src = dataUrl;
-        snapshotImage.alt = 'Website Snapshot';
-
-        const blob = await dataUrlToBlob(dataUrl);
-        const uploadResult = await uploadImage(blob);
-
-        const analysisResult = await analyzeImageWithOpenAI(uploadResult, apiToken); 
-        resultText.textContent = analysisResult.messageContent;
-
-      } else { // If the selected model is not OpenAI GPT-4, call an empty function or add your own functionality here
-        console.log('Selected model is not OpenAI GPT-4');
-        throw new Error('Selected model is not OpenAI GPT-4');
-      }
-
-    } catch (error) {
-      console.error(error);
-      resultText.textContent = error.message;
-    }
-  });
-
-  testButton.addEventListener('click', async () => {
-    try {
-      const apiToken = apiTokenInput.value;
-      if (!apiToken) {
-        throw new Error('Please enter your API Token');
-      }
-  
-      const model = document.getElementById('model').value;
-
-      if (model === 'openai_gpt4') {
+      validateModel(model);
 
       const dataUrl = await captureVisibleTab();
-      snapshotImage.src = dataUrl;
-      snapshotImage.alt = 'Website Snapshot';
-  
+      updateSnapshotImage(elements.snapshotImage, dataUrl);
+
       const blob = await dataUrlToBlob(dataUrl);
       const uploadResult = await uploadImage(blob);
-      const hintResult = await getHint(uploadResult, apiToken);
-  
-      const hintsPart = hintResult.messageContent.split('>>> Hint:')[1];
-      if (!hintsPart) {
-        console.error("No hints found in the hint result");
-        return;
+
+      if (isSnapshot) {
+          const analysisResult = await analyzeImageWithOpenAI(uploadResult, apiToken);
+          elements.resultText.textContent = analysisResult.messageContent;
+      } else {
+          const hintResult = await getHint(uploadResult, apiToken);
+          processHintResult(hintResult);
       }
-      
-      const hints = hintsPart.match(/“[^”]+”|"[^"]+"/g).map(hint => hint.replace(/“|”|"/g, '').trim()).filter(Boolean); 
-      console.log(hints); 
+  } catch (error) {
+      console.error(error);
+      elements.resultText.textContent = error.message;
+  }
+}
 
-  
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (chrome.runtime.lastError) {
-          console.error("Error querying tabs:", chrome.runtime.lastError.message);
-          return;
-        }
-    
-        if (!tabs.length) {
-          console.error("No active tabs found");
-          return;
-        }
-        
-        const activeTab = tabs[0];
-        // const tabTitle = activeTab.title; // Get title of the active tab
-        // const pageUrl = activeTab.url; // Get URL of the active tab
-        // const websiteName = new URL(pageUrl).hostname; // Ext
-        
-        // try {
-        //   const response = fetch('https://dark-pattern-detection-extension-myekke.vercel.app/api/saveHints', {
-        //     method: 'POST',
-        //     headers: {
-        //       'Content-Type': 'application/json',
-        //       // Any other headers like authentication tokens should be added here
-        //     },
-        //     body: JSON.stringify({
-        //       tabTitle,
-        //       websiteName,
-        //       pageUrl,
-        //       hints // This is an array of hints
-        //     })
-        //   });
+function validateApiToken(apiTokenInput) {
+  const apiToken = apiTokenInput.value;
+  if (!apiToken) throw new Error('Please enter your API Token');
+  return apiToken;
+}
 
-        //   const result = response.json();
-        //   console.log(result); // Log the response from the server
-        // } catch (error) {
-        //   console.error("Error sending hints to the server:", error);
-        // }
-  
-        
-    
-        chrome.scripting.executeScript({
-          target: { tabId: activeTab.id },
-          func: highlightHintsOnPage,
-          args: [hints]
-        }, (results) => {
-          if (chrome.runtime.lastError) {
-            console.error("Error injecting script:", chrome.runtime.lastError.message);
-          } else {
-            console.log("Script injected, results:", results); // Log results for debugging
-          }
-        });
-      });
+function validateModel(model) {
+  if (model !== 'openai_gpt4') throw new Error('Selected model is not OpenAI GPT-4');
+}
 
-    } else { // If the selected model is not OpenAI GPT-4, call an empty function or add your own functionality here
-      console.log('Selected model is not OpenAI GPT-4');
-      throw new Error('Selected model is not OpenAI GPT-4');
-    }
+function updateSnapshotImage(snapshotImage, dataUrl) {
+  snapshotImage.src = dataUrl;
+  snapshotImage.alt = 'Website Snapshot';
+}
 
+async function processHintResult(hintResult) {
+  const hintsPart = hintResult.messageContent.split('>>> Hint:')[1];
+  if (!hintsPart) {
+      console.error("No hints found in the hint result");
+      return;
+  }
 
-    } catch (error) {
-      console.error("Error fetching hints:", error);
-    }
+  const hints = extractHints(hintsPart);
+  console.log(hints);
+
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const activeTab = validateTabQuery(tabs);
+      if (activeTab) {
+          executeScriptOnTab(activeTab.id, hints);
+      }
   });
-  
-});
+}
+
+function extractHints(hintsPart) {
+  return hintsPart.match(/“[^”]+”|"[^"]+"/g).map(hint => hint.replace(/“|”|"/g, '').trim()).filter(Boolean);
+}
+
+function validateTabQuery(tabs) {
+  if (chrome.runtime.lastError) {
+      console.error("Error querying tabs:", chrome.runtime.lastError.message);
+      return null;
+  }
+
+  if (!tabs.length) {
+      console.error("No active tabs found");
+      return null;
+  }
+
+  return tabs[0];
+}
+
+function executeScriptOnTab(tabId, hints) {
+  chrome.scripting.executeScript({
+      target: { tabId },
+      func: highlightHintsOnPage,
+      args: [hints]
+  }, (results) => {
+      if (chrome.runtime.lastError) {
+          console.error("Error injecting script:", chrome.runtime.lastError.message);
+      } else {
+          console.log("Script injected, results:", results);
+      }
+  });
+}
+
 
 
 async function highlightHintsOnPage(hints) {
@@ -182,7 +156,8 @@ async function dataUrlToBlob(dataUrl) {
 async function uploadImage(blob) {
   console.log('Uploading image to server...');
   const formData = new FormData();
-  formData.append('image', blob, 'screenshot.png');
+  const filename = `screenshot-${new Date().toISOString()}.png`;
+  formData.append('image', blob, filename);
 
   const response = await fetch('https://dark-pattern-detection-extension-myekke.vercel.app/upload', {
     method: 'POST',
