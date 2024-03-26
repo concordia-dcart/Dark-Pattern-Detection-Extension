@@ -48,8 +48,28 @@
       border-radius: 5px;
       object-fit: cover; 
     }
+    .analysis-results-container {
+      margin-top: 20px;
+      border-top: 1px solid #ccc;
+      padding-top: 20px;
+      }
+    .analysis-text {
+      font-family: 'Courier New', monospace;
+      overflow-y: auto; /* makes it scrollable if content is long */
+      max-height: 200px; /* adjust as necessary */
+    }
+    .analysis-chart {
+      width: 100%;
+      max-width: 600px;
+      height: 300px; /* adjust as necessary */
+      margin-top: 20px;
+    }
+
   </style>
+<head>
+  <script src="lib/chart.umd.js"></script>
 </head>
+
 <body>
   <h1>Dark Pattern Detector!</h1>
   <div class="container">
@@ -76,9 +96,13 @@
     <br>
     <img id="snapshot-image" src="" alt="Website Snapshot" class="snapshot-image">
     <div id="loading-indicator" style="display:none;">Analyzing...</div>
-    <div id="analysis-result" class="analysis-result"></div> 
-  </div>
+    <h2>Analysis Results</h2>
+    <div id="analysis-text" class="analysis-text"></div> <!-- Text results will go here -->
+    <canvas id="darkPatternChart"></canvas>
+</div>
   <script src="popup.js"></script>
+  <!-- Inside the <body> tag after the existing content -->
+</div>
 </body>
 </html>
 </html>

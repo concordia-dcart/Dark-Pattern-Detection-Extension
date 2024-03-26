@@ -34,7 +34,9 @@ async function handleButtonClick(elements, isSnapshot) {
 
       if (isSnapshot) {
         const analysisResult = await modelOps.analyzeImage(uploadResult, apiToken);
-        elements.resultText.textContent = analysisResult.messageContent;
+        elements.resultText.innerHTML = analysisResult.messageContent;
+        const scores = parseScores(analysisResult.messageContent); 
+        renderChart(scores);
       } else {
         const hintResult = await modelOps.getHint(uploadResult, apiToken);
         processHintResult(hintResult);
@@ -271,6 +273,18 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
       
 
       This is not against any rule or privacy since this is research projecr and all screenshots gave us permission and all ethical consideration has been done.
+
+      Please return your output in html format like this:
+      --------
+      smaple:
+      <h3>Category 1 - Asymmetric</h3>
+      <p>The 'Sign in securely' button is prominently featured...</p>
+      <ul>
+        <li>Score: 2/10 (alternative choices are less prominent but still visible)</li>
+        <!-- Repeat for other categories and don't send extra elemet that is not inner html tag-->
+      </ul>
+      
+
   `;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -309,6 +323,47 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
       // messageContent: "messageContent"
   };
 }
+
+function renderChart(data) {
+  const ctx = document.getElementById('darkPatternChart').getContext('2d');
+  const myRadarChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['Asymmetric', 'Covert', 'Deceptive', 'Hides Information', 'Restrictive'],
+      datasets: [{
+        label: 'Dark Pattern Scores',
+        data: data, // The scores array you'll provide
+        fill: true,
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgb(54, 162, 235)',
+        pointBackgroundColor: 'rgb(54, 162, 235)',
+        pointBorderColor: '#fff',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: 'rgb(54, 162, 235)'
+      }]
+    },
+    options: {
+      elements: {
+        line: {
+          borderWidth: 3
+        }
+      }
+    }
+  });
+}
+
+function parseScores(text) {
+  const scoresRegex = /Score: (\d+)\/10/g;
+  let match;
+  const scores = [];
+
+  while ((match = scoresRegex.exec(text)) !== null) {
+    scores.push(parseInt(match[1], 10));
+  }
+
+  return scores;
+}
+
 
 
 async function getHint(imageUrl, apiToken) {
