@@ -55,14 +55,35 @@
       }
     .analysis-text {
       font-family: 'Courier New', monospace;
-      overflow-y: auto; /* makes it scrollable if content is long */
-      max-height: 200px; /* adjust as necessary */
+      overflow-y: auto; 
+      max-height: 200px;
     }
     .analysis-chart {
       width: 100%;
       max-width: 600px;
-      height: 300px; /* adjust as necessary */
+      height: 300px; 
       margin-top: 20px;
+    }
+    .loader {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db; /* Blue */
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      align-items: center;
+      justify-content: center;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    #loading-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
     }
 
   </style>
@@ -73,10 +94,6 @@
 <body>
   <h1>Dark Pattern Detector!</h1>
   <div class="container">
-    <div class="input-group">
-      <label for="email">Email:</label>
-      <input type="email" id="email" placeholder="Enter your email address">
-    </div>
     <div class="input-group">
       <label for="api-token">API Token:</label>
       <input type="text" id="api-token" placeholder="Enter your API token">
@@ -91,17 +108,18 @@
         <option value="lamma">LlaMA</option>
       </select>
     </div>
-    <button id="snapshot-button" class="primary-button">Describe Patterns</button>
-    <button id="testButton">Highlight Patterns</button>
+    <button id="snapshot-button" class="primary-button">Launch</button>
     <br>
-    <img id="snapshot-image" src="" alt="Website Snapshot" class="snapshot-image">
-    <div id="loading-indicator" style="display:none;">Analyzing...</div>
+    <img id="snapshot-image" class="snapshot-image placeholder">
     <h2>Analysis Results</h2>
-    <div id="analysis-text" class="analysis-text"></div> <!-- Text results will go here -->
+    <div id="loading-indicator" style="display:none;">
+      <div class="loader"></div>
+      <p>Analyzing...</p>
+    </div>
+    <div id="analysis-text" class="analysis-text"></div> 
     <canvas id="darkPatternChart"></canvas>
 </div>
   <script src="popup.js"></script>
-  <!-- Inside the <body> tag after the existing content -->
 </div>
 </body>
 </html>

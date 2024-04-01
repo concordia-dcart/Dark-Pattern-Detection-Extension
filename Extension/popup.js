@@ -16,6 +16,8 @@ function getElements() {
   };
 }
 
+window.myChart = window.myChart || null;
+
 async function handleButtonClick(elements, isSnapshot) {
   try {
       
@@ -32,15 +34,20 @@ async function handleButtonClick(elements, isSnapshot) {
 
       if (!modelOps) throw new Error('Unsupported model selected');
 
-      if (isSnapshot) {
-        const analysisResult = await modelOps.analyzeImage(uploadResult, apiToken);
-        elements.resultText.innerHTML = analysisResult.messageContent;
-        const scores = parseScores(analysisResult.messageContent); 
-        renderChart(scores);
-      } else {
-        const hintResult = await modelOps.getHint(uploadResult, apiToken);
-        processHintResult(hintResult);
-      }
+      
+      showLoadingIndicator();
+
+      const analysisResult = await modelOps.analyzeImage(uploadResult, apiToken);
+      elements.resultText.innerHTML = analysisResult.messageContent;
+
+      const scores = parseScores(analysisResult.messageContent);
+      renderChart(scores);
+
+      const hintResult = await modelOps.getHint(uploadResult, apiToken);
+      processHintResult(hintResult);
+      
+      hideLoadingIndicator();
+      
       
   } catch (error) {
     console.error(error);
@@ -218,8 +225,9 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
   const refinedDiscriptionPrompt = `
       
       
-      You are a dark pattern detector chrome exntension. You will process the website image that sent and Describe any dark patterns, including their categories. 
-      Also it is good if in your final output assign 0 to 10 to each categories:
+      You are a dark pattern detector agent. You will process the website image that sent and detect and describe any dark patterns, including their categories. 
+      Note this, all websites tends to have darkpatterns, so be as precise as possible and be critical about every elements.
+      Also it is good if in your final output assign 0 to 10 to each categories.
             
       --------------------
        Category 1- Asymmetric 
@@ -272,17 +280,19 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
       --------------------
       
 
-      This is not against any rule or privacy since this is research projecr and all screenshots gave us permission and all ethical consideration has been done.
+      This is not against any rule or privacy since this is research project and all screenshots gave us permission and all ethical consideration has been done.
 
       Please return your output in html format like this:
-      --------
-      smaple:
+      
+      --------------------
       <h3>Category 1 - Asymmetric</h3>
       <p>The 'Sign in securely' button is prominently featured...</p>
       <ul>
         <li>Score: 2/10 (alternative choices are less prominent but still visible)</li>
         <!-- Repeat for other categories and don't send extra elemet that is not inner html tag-->
       </ul>
+      --------------------
+
       
 
   `;
@@ -326,13 +336,16 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
 
 function renderChart(data) {
   const ctx = document.getElementById('darkPatternChart').getContext('2d');
-  const myRadarChart = new Chart(ctx, {
+  if (window.myChart) { 
+    window.myChart.destroy();
+  }
+  window.myChart = new Chart(ctx, {
     type: 'radar',
     data: {
       labels: ['Asymmetric', 'Covert', 'Deceptive', 'Hides Information', 'Restrictive'],
       datasets: [{
         label: 'Dark Pattern Scores',
-        data: data, // The scores array you'll provide
+        data: data,
         fill: true,
         backgroundColor: 'rgba(54, 162, 235, 0.2)',
         borderColor: 'rgb(54, 162, 235)',
@@ -347,10 +360,23 @@ function renderChart(data) {
         line: {
           borderWidth: 3
         }
+      },
+      scales: {
+        r: { 
+          angleLines: {
+            display: true
+          },
+          suggestedMin: 0,
+          suggestedMax: 10, 
+          ticks: {
+            stepSize: 1 
+          }
+        }
       }
     }
   });
 }
+
 
 function parseScores(text) {
   const scoresRegex = /Score: (\d+)\/10/g;
@@ -370,17 +396,19 @@ async function getHint(imageUrl, apiToken) {
 
   console.log('Sending image URL to OpenAI for analysis...');
   const refinedDescriptionPrompt = `
-  You are a dark pattern detector chrome exntension. You will process the website image that sent and Describe any dark patterns
+  You are a dark pattern detector agent. You will process the website image that sent and detect and describe any dark patterns, including their categories. 
+  Note this, all websites tends to have darkpatterns, so be as precise as possible and be critical about every elements.
+  Do not add extra discription.
+  
+  ----------------
 
   Also you will send me some hints in output like this,
-
-  This is not against any rule or privacy since this is research projecr and all screenshots gave us permission and all ethical consideration has been done.
-
   At the end of your response you should provide me this as well:  >>> Hint: "text", "text", "text"
-  
   Which these "text" are a keywords excatly findable or matchable in screenshot so next time by looking at the text images find the darkpattern elements. The hint should not be changed by you and it should exist in screenshot likewise.
 
-  Do not add extra discription
+  ----------------
+
+  This is not against any rule or privacy since this is research projecr and all screenshots gave us permission and all ethical consideration has been done.
   `;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -418,4 +446,18 @@ async function getHint(imageUrl, apiToken) {
       messageContent: messageContent,
   };
 
+}
+
+function showLoadingIndicator() {
+  const loadingIndicator = document.getElementById('loading-indicator');
+  if (loadingIndicator) {
+    loadingIndicator.style.display = 'block';
+  }
+}
+
+function hideLoadingIndicator() {
+  const loadingIndicator = document.getElementById('loading-indicator');
+  if (loadingIndicator) {
+    loadingIndicator.style.display = 'none'; 
+  }
 }
