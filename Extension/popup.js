@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.appendChild(elements.resultText);
 
   elements.snapshotButton.addEventListener('click', () => handleButtonClick(elements, true));
-  elements.testButton.addEventListener('click', () => handleButtonClick(elements, false));
 });
 
 function getElements() {
@@ -38,7 +37,10 @@ async function handleButtonClick(elements, isSnapshot) {
       showLoadingIndicator();
 
       const analysisResult = await modelOps.analyzeImage(uploadResult, apiToken);
-      elements.resultText.innerHTML = analysisResult.messageContent;
+     
+      const analysisTextElement = document.getElementById('analysis-text');
+      analysisTextElement.innerHTML = analysisResult.messageContent;
+      
 
       const scores = parseScores(analysisResult.messageContent);
       renderChart(scores);
@@ -150,25 +152,47 @@ async function highlightHintsOnPage(hints) {
     return string.replace(/[.*+?^${}()|[\]\\%-]/g, '\\$&');
   }
 
+  function highlightText(element, regex) {
+    element.childNodes.forEach(child => {
+      if (child.nodeType === 3 && regex.test(child.nodeValue)) {
+        const fragment = document.createDocumentFragment();
+        let lastIdx = 0;
+        child.nodeValue.replace(regex, (match, offset) => {
+
+          if (offset > lastIdx) {
+            fragment.appendChild(document.createTextNode(child.nodeValue.slice(lastIdx, offset)));
+          }
+
+          const highlightSpan = document.createElement('span');
+          highlightSpan.textContent = match;
+          highlightSpan.style.backgroundColor = 'yellow';
+          fragment.appendChild(highlightSpan);
+          
+          lastIdx = offset + match.length;
+        });
+
+        if (lastIdx < child.nodeValue.length) {
+          fragment.appendChild(document.createTextNode(child.nodeValue.slice(lastIdx)));
+        }
+        child.replaceWith(fragment);
+      }
+    });
+  }
+
   hints.forEach(hint => {
     const escapedHint = escapeRegExp(hint);
     const regex = new RegExp(escapedHint, "gi");
 
     document.querySelectorAll("p, div, span, h1, h2, h3, h4, h5, h6, li, td, th").forEach(element => {
       if (element.innerText.match(regex)) {
-        element.childNodes.forEach(child => {
-          if (child.nodeType === 3 && regex.test(child.nodeValue)) { 
-            const newHtml = child.nodeValue.replace(regex, '<span style="background-color: yellow;">$&</span>');
-            const newSpan = document.createElement('span');
-            newSpan.innerHTML = newHtml;
-            child.replaceWith(newSpan);
-          }
-        });
+        highlightText(element, regex);
       }
     });
   });
+
   return "Success";
 }
+
 
 
 async function captureVisibleTab() {
@@ -325,9 +349,16 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
   let messageContent = ""; 
 
   if (data && data.choices && data.choices.length > 0 && data.choices[0].message && data.choices[0].message.content) {
-      messageContent = data.choices[0].message.content;
-     
+    // Extract the message content
+    messageContent = data.choices[0].message.content;
+
+    // Remove Markdown code block indicators if present
+    messageContent = messageContent.replace(/```html/g, '').replace(/```/g, '');
+
+    // Ensure there's a new line between paragraphs by adding extra newline characters
+    messageContent = messageContent.replace(/<\/p>/g, '</p>\n\n');
   }
+
   return {
       messageContent: messageContent
       // messageContent: "messageContent"
