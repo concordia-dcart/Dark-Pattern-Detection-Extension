@@ -14,6 +14,51 @@
       transform: rotate(360deg);
     }
   }
+  .analysis-title {
+            font-size: 1rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+  }
+    .analysis-text {
+        margin-bottom: 1rem;
+  }
+  #analysis-section {
+  font-family: Arial, sans-serif; /* Use a standard font for consistency */
+    }
+
+    h3 {
+    color: #333; /* Dark grey color for headings */
+    background-color: #f7f7f7; /* Light grey background */
+    padding: 8px 15px; /* Padding around headings */
+    border-left: 5px solid #007bff; /* Blue accent on the left border */
+    margin-bottom: 10px; /* Spacing after each heading */
+    }
+
+    p {
+    color: #666;
+    padding: 0 15px;
+    margin-top: 2px;
+    margin-bottom: 10px; 
+    }
+
+    ul {
+    list-style-type: none; 
+    padding: 0 15px; 
+    margin-bottom: 10px;
+    }
+
+    ul li {
+    background: #e9ecef; 
+    color: #333; 
+    padding: 5px 10px;
+    border-radius: 5px; 
+    margin-top: 2px; 
+    margin-bottom: 12px;
+    }
+
+    ul li:nth-child(odd) {
+    background: #f8f9fa; 
+    }
   </style>
 
 <head>
@@ -48,12 +93,14 @@
             <div class="mt-4">
               <img id="snapshot-image" class="w-full h-auto rounded border-gray-200" />
           </div>
-          <h2 class="text-xl font-bold mt-4 mb-2">Analysis Results</h2>
+          <div id="space-x-2" class="mb-4"><!-- Optionally, add content here --></div>
           <div id="loading-indicator" class="flex justify-center items-center space-x-2 hidden">
               <div class="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full" role="status"></div>
               <div>Please wait, our analyzer might take more than 20 seconds to respond.</div>
           </div>
+          <div id="space-x-2" class="mb-4"><!-- Optionally, add content here --></div>
           <div class="container bg-white rounded shadow">
+            <h3 class="block text-gray-700 text-sm font-bold mb-2">Analysis Results</h3>
             <div id="analysis-section" class="p-4">
                 <div id="analysis-text" class="mb-4"><!-- Optionally, add content here --></div>
                 <canvas id="darkPatternChart"></canvas>

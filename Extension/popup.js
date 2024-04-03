@@ -18,11 +18,14 @@ function getElements() {
 window.myChart = window.myChart || null;
 
 async function handleButtonClick(elements, isSnapshot) {
+
   try {
       
       const apiToken = validateApiToken(elements.apiTokenInput);
 
       const dataUrl = await captureVisibleTab();
+      
+      showLoadingIndicator();
       updateSnapshotImage(elements.snapshotImage, dataUrl);
 
       const blob = await dataUrlToBlob(dataUrl);
@@ -32,9 +35,6 @@ async function handleButtonClick(elements, isSnapshot) {
       const modelOps = modelOperations[model];
 
       if (!modelOps) throw new Error('Unsupported model selected');
-
-      
-      showLoadingIndicator();
 
       const analysisResult = await modelOps.analyzeImage(uploadResult, apiToken);
      
@@ -46,15 +46,15 @@ async function handleButtonClick(elements, isSnapshot) {
       renderChart(scores);
 
       const hintResult = await modelOps.getHint(uploadResult, apiToken);
-      processHintResult(hintResult);
-      
-      hideLoadingIndicator();
-      
+      processHintResult(hintResult); 
       
   } catch (error) {
     console.error(error);
     elements.resultText.textContent = error.message;
   }
+
+  hideLoadingIndicator();
+
 }
 
 
@@ -85,14 +85,18 @@ const modelOperations = {
 
 
 function validateApiToken(apiTokenInput) {
+
   const apiToken = apiTokenInput.value;
   if (!apiToken) throw new Error('Please enter your API Token');
   return apiToken;
+
 }
 
 function updateSnapshotImage(snapshotImage, dataUrl) {
+  
   snapshotImage.src = dataUrl;
   snapshotImage.alt = 'Website Snapshot';
+  
 }
 
 async function processHintResult(hintResult) {
@@ -359,6 +363,7 @@ async function analyzeImageWithOpenAI(imageUrl, apiToken) {
     messageContent = messageContent.replace(/<\/p>/g, '</p>\n\n');
   }
 
+  console.log(messageContent);
   return {
       messageContent: messageContent
       // messageContent: "messageContent"
